@@ -120,15 +120,19 @@ func Run(conf ServerConf) {
 	fileDir := filepath.Join(conf.DataDir, "f")
 	handle("_f/", newFileServer(fileDir, conf.Keychain, auth, conf.BaseURL+"_f"))
 	for _, dir := range conf.PrivateDirs {
-
-		checkDirectory(dir)
+		
+		if err := checkDirectory(dir); err != nil {
+			log.Fatalf("Error checking private directory: %v", err)
+		}
 		prefix, src := splitDirMapping(dir)
 		echo(Log{"t": "private_dir", "source": src, "address": prefix})
 		handle(prefix, http.StripPrefix(conf.BaseURL+prefix, newDirServer(src, conf.Keychain, auth)))
 	}
 	for _, dir := range conf.PublicDirs {
 
-		checkDirectory(dir)
+		if err := checkDirectory(dir); err != nil {
+			log.Fatalf("Error checking public directory: %v", err)
+		}
 		prefix, src := splitDirMapping(dir)
 		echo(Log{"t": "public_dir", "source": src, "address": prefix})
 		handle(prefix, http.StripPrefix(conf.BaseURL+prefix, http.FileServer(http.Dir(src))))
